@@ -1,0 +1,73 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_netflix_logicapp_trigger_name": {
+            "defaultValue": "netflix-logicapp-trigger",
+            "type": "String"
+        },
+        "connections_azuredatafactory_externalid": {
+            "defaultValue": "/subscriptions/cc123efa-10ea-45a3-8503-99dde3fe8373/resourceGroups/logicapp_group/providers/Microsoft.Web/connections/azuredatafactory",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_netflix_logicapp_trigger_name')]",
+            "location": "northcentralus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_an_HTTP_request_is_received": {
+                            "type": "Request",
+                            "kind": "Http"
+                        }
+                    },
+                    "actions": {
+                        "Create_a_pipeline_run": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuredatafactory']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/subscriptions/@{encodeURIComponent('cc123efa-10ea-45a3-8503-99dde3fe8373')}/resourcegroups/@{encodeURIComponent('RG_Netflixproject')}/providers/Microsoft.DataFactory/factories/@{encodeURIComponent('adf-netflix-pri')}/pipelines/@{encodeURIComponent('pipeline1')}/CreateRun",
+                                "queries": {
+                                    "x-ms-api-version": "2017-09-01-preview"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azuredatafactory": {
+                                "id": "/subscriptions/cc123efa-10ea-45a3-8503-99dde3fe8373/providers/Microsoft.Web/locations/northcentralus/managedApis/azuredatafactory",
+                                "connectionId": "[parameters('connections_azuredatafactory_externalid')]",
+                                "connectionName": "azuredatafactory",
+                                "connectionProperties": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
